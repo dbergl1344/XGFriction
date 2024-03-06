@@ -2,7 +2,9 @@ library(devtools)
 library(REddyProc)
 library(xgboost)
 library(roxygen2)
+
 create_package("~/Documents/GitHub/XGFriction")
+devtools::load_all("~/Documents/GitHub/XGFriction")
 
 colnames(Bartlett_30_minute_data_July2023)
 
