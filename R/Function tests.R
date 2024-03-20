@@ -1,4 +1,4 @@
-devtools::document()
+
 #' This class represents a processor for XGFriction data.
 #'
 #' @field site The name of the site associated with the processor.
@@ -27,6 +27,7 @@ XGFrictionProcessor <- setRefClass("XGFrictionProcessor",
                                    )
 )
 
+devtools::document()
 
 #' Initialize XGFriction Processor
 #'
@@ -38,6 +39,26 @@ XGFrictionProcessor <- setRefClass("XGFrictionProcessor",
 initialize_xgfriction_processor <- function(site) {
   return(XGFrictionProcessor$new(site))
 }
+?XGFrictionProcessor
+?initialize_xgfriction_processor
+
+##Test dataframe
+# Subsetting to get data for the year 2007
+Bartlett_2010 <- Bartlett_30_minute_data_July2023[Bartlett_30_minute_data_July2023$YEAR == 2010, ]
+
+# check
+print(sum(is.na(Bartlett_2010$NEE)))
+
+
+##example usage for functions above:
+# Create an instance of the XGFrictionProcessor class for the site 'US-Bar'
+processor <- initialize_xgfriction_processor('US-Bar')
+# Call the initialize_xgfriction_processing method with their dataframe and other parameters
+xgfriction_proc <- processor$initialize_xgfriction_processing(Bartlett_2010, LatDeg = 40.7128, LongDeg = -74.0060, TimeZoneHour = -5)
+
+
+
+
 
 
 #' Gap Fill MDS Variables
@@ -66,6 +87,12 @@ gap_fill_mds_variables <- function(processor, variables, fill_all = FALSE) {
 
 
 
+
+##package user example:
+gap_fill_mds_variables(xgfriction_proc, variables = c('NEE', 'Rg', 'Tair'), fill_all = TRUE)
+
+
+
 #' Perform IQR Filtering
 #'
 #' This function performs IQR filtering on specified variables.
@@ -84,6 +111,11 @@ perform_iqr_filtering <- function(xgfriction_proc, dataframe, variables, thresho
   }
   return(xgfriction_proc)
 }
+
+# Perform IQR filtering using their own processing object
+my_processor <- perform_iqr_filtering(my_processor, dataframe = Bartlett_2010, variables = c('NEE', 'Rg', 'Tair'), threshold_multiplier = 6)
+
+
 
 
 #' Perform Ustar Threshold Distribution Estimation and Gap Filling
@@ -106,6 +138,16 @@ perform_ustar_gap_fill <- function(processor, dataframe, variable, nSample = 100
   processor$sMDSGapFillAfterUStarDistr(variable, uStarTh = uStarThAnnual, uStarSuffixes = uStarSuffixes, FillAll = fill_all)
   return(processor)
 }
+
+
+##for user
+# Assuming the user has their own initialized processing object named my_processor
+my_processor <- processor$initialize_xgfriction_processing(Bartlett_2010, LatDeg = 40.7128, LongDeg = -74.0060, TimeZoneHour = -5)
+
+# Perform u* threshold distribution estimation and gap filling using their own processing object, data frame, and variable
+my_processor <- perform_ustar_gap_fill(my_processor, dataframe = Bartlett_2010, variable = "NEE")
+
+
 
 
 
@@ -209,6 +251,20 @@ select_best_model <- function(results, metric, higher_is_better = TRUE) {
 }
 
 
+##user example
+# Train the XGBoost model
+my_model <- train_xgboost_model(data = my_data, formula = my_formula, grid = my_grid, folds = 10, repeats = 3)
+
+# Select the best model based on the RMSE metric
+best_model <- select_best_model(results = my_model$results, metric = "rmse")
+
+# Select the best model based on the R-squared metric
+best_model <- select_best_model(results = my_model$results, metric = "rsq", higher_is_better = TRUE)
+
+
+
+
+
 
 
 #' Plot Variables of Importance
@@ -270,142 +326,5 @@ predict_missing_data <- function(model, data) {
 
 
 
-#' Create Gap-Filled Column
-#'
-#' This function creates a new column in the dataset where missing values are filled with predictions from a specified model.
-#'
-#' @param data The dataset.
-#' @param varname The name of the target variable.
-#' @param model The trained model for predicting missing values.
-#' @return The dataset with the new gap-filled column.
-#' @export
-create_gap_filled_column <- function(data, varname, model) {
-  require(xgboost)
-
-  # Create new column name
-  new_col_name <- paste0(varname, "_f")
-
-  # Copy original values to the new column
-  data[[new_col_name]] <- data[[varname]]
-
-  # Find rows with missing values
-  missing_rows <- which(is.na(data[[varname]]))
-
-  # If there are missing values, fill them with predictions from the model
-  if (length(missing_rows) > 0) {
-    # Predict missing values
-    predicted_values <- predict(model, newdata = data[missing_rows, ])
-
-    # Replace NA values with predicted values in the new column
-    data[missing_rows, new_col_name] <- predicted_values
-  }
-
-  return(data)
-}
-
-# Assuming 'data' is your dataset and 'my_model' is your trained XGBoost model
-# data <- create_gap_filled_column(data, "varname", my_model)
 
 
-
-
-#' Replace Variables in REddyProc Object
-#'
-#' This function replaces specified variables in a REddyProc object with columns from a dataset.
-#'
-#' @param processor The REddyProc object.
-#' @param data The dataset containing columns to replace variables with.
-#' @param varnames Vector of variable names to replace in the REddyProc object.
-#' @return Updated REddyProc object with replaced variables.
-#' @export
-replace_variables_in_REddyProc <- function(processor, data, varnames) {
-  require(data.table)
-
-  # Convert dataset to data.table for easier column manipulation
-  dt_filled <- as.data.table(data)
-
-  # Loop through each variable to replace
-  for (varname in varnames) {
-    # Get the corresponding column from the dataset
-    col_name <- paste0(varname, "_f")
-
-    # Check if the column exists in the dataset
-    if (col_name %in% names(dt_filled)) {
-      # Replace the variable in the REddyProc object with the corresponding column
-      processor$sTEMP[[varname]] <- dt_filled[[col_name]]
-    } else {
-      warning(paste("Column", col_name, "not found in the dataset. Skipping replacement."))
-    }
-  }
-
-  return(processor)
-}
-
-#check
-# # Assuming 'processor' is your REddyProc object and 'data' is your dataset with the new columns
-# processor <- replace_variables_in_REddyProc(processor, data, c("NEE_U05", "NEE_U50", "NEE_U95"))
-
-
-
-
-
-
-#' Perform Flux Partitioning
-#'
-#' This function performs flux partitioning using the specified method and parameters.
-#'
-#' @param processor The REddyProc object.
-#' @param method The partitioning method to use. Options: "sGL", "sMR", "sTK".
-#' @param params List of parameters required for the chosen method.
-#'   - For "sGL" method:
-#'     - useLocaltime: Logical. If TRUE, use local time zone instead of geo-solar time to compute potential radiation.
-#'     - debug.l: Deprecated. Use debug instead.
-#'     - isWarnReplaceColumns: Logical. Set to FALSE to avoid the warning on replacing output columns.
-#'   - For "sMR" method:
-#'     - FluxVar: Character. Name of the net ecosystem flux variable.
-#'     - QFFluxVar: Character. Name of the quality-flagged net ecosystem flux variable.
-#'     - QFFluxValue: Numeric. Quality flag value to indicate bad flux values.
-#'     - TempVar: Character. Name of the temperature variable.
-#'     - QFTempVar: Character. Name of the quality-flagged temperature variable.
-#'     - QFTempValue: Numeric. Quality flag value to indicate bad temperature values.
-#'     - RadVar: Character. Name of the radiation variable.
-#'     - TRef: Numeric. Reference temperature.
-#'     - Suffix.s: Character. Suffix for the partitioning results.
-#'   - For "sTK" method:
-#'     - controlGLPart: Further default parameters, such as suffix.
-#' @return A list containing the partitioning results.
-#' @export
-perform_flux_partitioning <- function(processor, method, params) {
-  method <- tolower(method)
-  if (method == "sgl") {
-    if (!is.null(params$uStarScenKeep)) {
-      params <- c(params, isWarnReplaceColumns = FALSE)
-    }
-    results <- processor$sGLFluxPartition(params)
-  } else if (method == "smr") {
-    results <- processor$sMRFluxPartition(params)
-  } else if (method == "stk") {
-    results <- processor$sTKFluxPartition(params)
-  } else {
-    stop("Invalid partitioning method. Choose from 'sGL', 'sMR', or 'sTK'.")
-  }
-  return(results)
-}
-
-
-
-
-###check
-
-# # Example usage with different processor names
-# # Assuming 'my_processor' is the user's REddyProc object
-# nighttime_params <- list(FluxVar = "NEE_f", QFFluxVar = "NEE_fqc", QFFluxValue = 0,
-#                          TempVar = "Tair_f", QFTempVar = "Tair_fqc", QFTempValue = 0,
-#                          RadVar = "Rg", TRef = 273.15 + 15, Suffix.s = "suffix")
-# nighttime_results <- perform_flux_partitioning(my_processor, "sMR", nighttime_params)
-
-
-
-
-
-##okay and now checking fingerprint plot for GPP Reco and NEE
