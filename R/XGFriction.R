@@ -409,3 +409,10 @@ perform_flux_partitioning <- function(processor, method, params) {
 
 
 ##okay and now checking fingerprint plot for GPP Reco and NEE
+
+
+
+
+library(devtools)
+use_pkgdown()
+usethis::use_pkgdown_github_pages()
