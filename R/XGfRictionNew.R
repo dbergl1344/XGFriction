@@ -1,4 +1,11 @@
-##XGfRiction package name
+library(devtools)
+?devtools::document()
+
+
+##Package name: XGfRiction
+use_git()
+
+
 
 #' This class represents a processor for XGFriction data.
 #'
@@ -410,5 +417,3 @@ perform_flux_partitioning <- function(processor, method, params) {
 
 
 ##okay and now checking fingerprint plot for GPP Reco and NEE
-
-devtools::document()

@@ -20,9 +20,3 @@ library(XGfRiction)
 
 
 
-#when you reference functions you want to use print() to reference code blocks letting it know to make a link bewteen things. 
-#You can tell it whether or not you want it to show outputs or something along those lines, so you can tell it to run the code block but not show the results. 
-
-
-
-##If you Knit this you can look to see what your vignette looks like, but make sure that you delete the knitR after because we are not allowed to have KnitR's of our package. 
