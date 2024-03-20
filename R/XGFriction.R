@@ -1,4 +1,5 @@
 devtools::document()
+
 #' This class represents a processor for XGFriction data.
 #'
 #' @field site The name of the site associated with the processor.
