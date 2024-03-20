@@ -26,3 +26,5 @@ library(XGfRiction)
 
 
 ##If you Knit this you can look to see what your vignette looks like, but make sure that you delete the knitR after because we are not allowed to have KnitR's of our package. 
+
+

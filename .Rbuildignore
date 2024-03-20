@@ -1,3 +1,7 @@
 ^XGFriction\.Rproj$
 ^\.Rproj\.user$
 ^XGfRiction\.Rproj$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
