@@ -1,5 +1,5 @@
 ##XGfRiction package name
-
+devtools::document()
 #' This class represents a processor for XGFriction data.
 #'
 #' @field site The name of the site associated with the processor.
@@ -411,4 +411,5 @@ perform_flux_partitioning <- function(processor, method, params) {
 
 ##okay and now checking fingerprint plot for GPP Reco and NEE
 
-devtools::document()
+
+
